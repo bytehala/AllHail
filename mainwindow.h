@@ -34,6 +34,13 @@ public slots:
     void snapLeft();
     void snapRight();
     void updateStatusBarText();
+    void drawAtlasBox(int, int);
+    void updateItemProperties();
+    void receiveAtlasName(QString);
+    QString createAndEngineCode(); // TODO: temporary??
+
+signals:
+    void dataShouldUpdate(QString, int, int, bool);
 
 
 private:
@@ -55,8 +62,16 @@ private:
     float currentScale_;
     NewProjectDialog *dialog;
 
+    // Parsing related
+    QString atlasName_;
+//    QString createAndEngineCode();
+
     static const QString ITEMS_TO_LEFT;// = "itemsToLeft";
     static const QString ITEMS_ABOVE;// = "itemsAbove";
+    static const QString TEXREG_NROWS;
+    static const QString TEXREG_NCOLUMNS;
+    static const QString TEXREG_VARNAME;
+    static const QString TEXREG_IS_TILED;
 
     void setPreviewScene(QGraphicsScene*);
     void updatePreview(int);
@@ -65,6 +80,8 @@ private:
     void createProject();
     bool correctCollisions(QGraphicsItem*, enum SnapDirection);
     void finalizeCollisions(QGraphicsItem*, enum SnapDirection);
+    void updatePropertiesData(QGraphicsItem*);
+    void emptyPropertiesData();
 };
 
 #endif // MAINWINDOW_H

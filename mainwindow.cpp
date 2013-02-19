@@ -18,6 +18,11 @@ enum SnapDirection
 const QString MainWindow::ITEMS_TO_LEFT("itemsToLeft");
 const QString MainWindow::ITEMS_ABOVE("itemsAbove");
 
+const QString MainWindow::TEXREG_NROWS("nRows");
+const QString MainWindow::TEXREG_NCOLUMNS("nColumns");
+const QString MainWindow::TEXREG_VARNAME("varName");
+const QString MainWindow::TEXREG_IS_TILED("bIsTiled");
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -26,6 +31,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->setupUi(this);
     showMaximized();
+
+    QIntValidator* validator = new QIntValidator(1, 100);
+    ui->nRowsText->setValidator(validator);
+    ui->nColumnsText->setValidator(validator);
 
     imagesListWidget_ = ui->listWidget;
     previewView_ = ui->previewView;
@@ -38,9 +47,6 @@ MainWindow::MainWindow(QWidget *parent) :
     atlasView_->setAlignment(Qt::AlignTop | Qt::AlignLeft);
     atlasView_->setScene(atlasScene_);
     atlasScene_->addPixmap(QPixmap::fromImage(image))->setFlags((QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable));
-    currentAtlasRect_ = QRectF(0, 0, 512, 512);
-    atlasScene_->addLine(513, 0, 513, 513);
-    atlasScene_->addLine(0, 513, 513, 513);
 
     statusBarText_ = new QLabel();
     statusBarText_->setText("blah");
@@ -49,6 +55,7 @@ MainWindow::MainWindow(QWidget *parent) :
 //    atlasScene_->installEventFilter(this);
 
     // DEBUG CODE
+    drawAtlasBox(512, 512);
     projectPath_ = "C:/Users/lemuel.dulfo/workspace/RuleThemAll" ;
     createProject();
 
@@ -69,10 +76,6 @@ bool MainWindow::eventFilter(QObject *object, QEvent *event)
         }
         case 157:
         {
-            qDebug() << "MouseUp";//event->type();
-
-            //         == QEvent::MouseButtonRelease
-            //         qDebug() << event->type();
             return false;
         }
         }
@@ -83,6 +86,8 @@ bool MainWindow::eventFilter(QObject *object, QEvent *event)
 void MainWindow::newProjectDialog()
 {
     NewProjectDialog dialog(this);
+    connect(&dialog, SIGNAL(widthAndHeightValidated(int, int)), this, SLOT(drawAtlasBox(int,int)));
+    connect(&dialog, SIGNAL(sendAtlasName(QString)), this, SLOT(receiveAtlasName(QString)));
     dialog.exec();
 }
 
@@ -120,14 +125,75 @@ void MainWindow::createProject()
             image.load(info.absoluteFilePath());
             QGraphicsScene* scene = new QGraphicsScene();
             scene->addPixmap(QPixmap::fromImage(image));
+//            QString dimensions = QString::number(image.width()) + "x" + QString::number(image.height());
             previewList_.append(scene);
         }
 
-        updatePreview(0);
+        //updatePreview(0);
+    }
+}
+
+// When selection has changed, call this so that the toolbar data updates
+void MainWindow::updatePropertiesData(QGraphicsItem * item)
+{
+    QString itemName("");
+    bool isTiled = false;
+    int nRows = 0;
+    int nColumns = 0;
+    if(item) // Item is not null
+    {
+        QJsonObject userData = item->data(Qt::UserRole).toJsonObject();
+        nRows = (int) userData.find(TEXREG_NROWS).value().toDouble();
+        nColumns = (int) userData.find(TEXREG_NCOLUMNS).value().toDouble();
+        isTiled = userData.find(TEXREG_IS_TILED).value().toBool();
+        itemName = userData.find(TEXREG_VARNAME).value().toString();
+
+        ui->varNameText->setText(itemName);
+        ui->varNameText->setEnabled(true);
+        ui->isTiledCheckBox->setChecked(isTiled);
+        ui->isTiledCheckBox->setEnabled(true);
+        QString rowString = "", colString = "";
+        if(nRows > 0)
+            rowString = QString::number(nRows);
+        if(nColumns > 0)
+            colString = QString::number(nColumns);
+        ui->nRowsText->setText(rowString);
+        ui->nColumnsText->setText(colString);
     }
 }
 
 // Slots
+
+void MainWindow::receiveAtlasName(QString atlasName)
+{
+    atlasName_ = atlasName;
+}
+
+// When toolbar data updates, call this so that item data updates
+void MainWindow::updateItemProperties()
+{
+    QString itemName = ui->varNameText->text();
+    bool isTiled = ui->isTiledCheckBox->isChecked();
+    int nRows = ui->nRowsText->text().toInt();
+    int nColumns = ui->nColumnsText->text().toInt();
+    QList<QGraphicsItem*> selectedItems = atlasScene_->selectedItems();
+    foreach(QGraphicsItem* item, selectedItems)
+    {
+        QJsonObject userData = item->data(Qt::UserRole).toJsonObject();
+        userData.insert(TEXREG_VARNAME, itemName);
+        userData.insert(TEXREG_IS_TILED, isTiled);
+        userData.insert(TEXREG_NCOLUMNS, nColumns);
+        userData.insert(TEXREG_NROWS, nRows);
+        item->setData(Qt::UserRole, userData);
+    }
+}
+
+void MainWindow::drawAtlasBox(int width, int height)
+{
+    currentAtlasRect_ = QRectF(0, 0, width, height);
+    atlasScene_->addLine(width + 1, 0, width + 1, height + 1);
+    atlasScene_->addLine(0, height + 1, width + 1, height + 1);
+}
 
 void MainWindow::updateStatusBarText()
 {
@@ -160,9 +226,8 @@ void MainWindow::snapUp()
     {
         item->setY(0);
         QJsonObject userData = item->data(Qt::UserRole).toJsonObject();
-        int topIndex = (int) userData.find(ITEMS_ABOVE).value().toDouble();
         int leftIndex = (int) userData.find(ITEMS_TO_LEFT).value().toDouble();
-        userData.insert(ITEMS_ABOVE, topIndex);
+        userData.insert(ITEMS_ABOVE, 0);
         userData.insert(ITEMS_TO_LEFT, leftIndex);
         item->setData(Qt::UserRole, userData);
         correctCollisions(item, SNAP_UP);
@@ -190,9 +255,9 @@ void MainWindow::snapLeft()
         item->setX(0);
         QJsonObject userData = item->data(Qt::UserRole).toJsonObject();
         int topIndex = (int) userData.find(ITEMS_ABOVE).value().toDouble();
-        int leftIndex = (int) userData.find(ITEMS_TO_LEFT).value().toDouble();
         userData.insert(ITEMS_ABOVE, topIndex);
-        userData.insert(ITEMS_TO_LEFT, leftIndex);
+        userData.insert(ITEMS_TO_LEFT, 0);
+        item->setData(Qt::UserRole, userData);
         correctCollisions(item, SNAP_LEFT);
         //finalizeCollisions(item, SNAP_LEFT);
     }
@@ -216,11 +281,13 @@ void MainWindow::selectAnother()
     if(selectedGraphicsItem_ == NULL)
     {
         selectedGraphicsItem_ = selectedItems_.at(0);
+        updatePropertiesData(selectedGraphicsItem_);
     }
     else // There is exactly one selected item
     {
         // This is good enough.
         atlasScene_->clearSelection();
+        emptyPropertiesData();
         selectedGraphicsItem_ = NULL;
     }
 }
@@ -314,6 +381,8 @@ bool MainWindow::correctCollisions(QGraphicsItem* selectedItem, SnapDirection sn
     // TODO: Set QVariant(Object) userData to know how many 0.5 to deduct
     QList<QGraphicsItem*> collidingItems = atlasScene_->collidingItems(selectedItem);
     qreal min_max = 0;
+    bool shouldMove = false;
+
     if(snapDirection == SNAP_DOWN)
     {
         min_max = currentAtlasRect_.height();
@@ -332,14 +401,8 @@ bool MainWindow::correctCollisions(QGraphicsItem* selectedItem, SnapDirection sn
             qreal lowest = collidingItem->sceneBoundingRect().bottom();
             if(lowest > min_max)
             {
-                QJsonObject userData = selectedItem->data(Qt::UserRole).toJsonObject();
-                int topIndex = (int) userData.find(ITEMS_ABOVE).value().toDouble();
-                int leftIndex = (int) userData.find(ITEMS_TO_LEFT).value().toDouble();
-                userData.insert(ITEMS_ABOVE, ++topIndex);
-                userData.insert(ITEMS_TO_LEFT, leftIndex);
-                selectedItem->setData(Qt::UserRole, userData);
+                shouldMove = true;
                 min_max = lowest;
-                selectedItem->setY(min_max);
             }
             break;
         }
@@ -358,14 +421,8 @@ bool MainWindow::correctCollisions(QGraphicsItem* selectedItem, SnapDirection sn
             qreal left = collidingItem->sceneBoundingRect().right();
             if(left > min_max)
             {
-                QJsonObject userData = selectedItem->data(Qt::UserRole).toJsonObject();
-                int topIndex = (int) userData.find(ITEMS_ABOVE).value().toDouble();
-                int leftIndex = (int) userData.find(ITEMS_TO_LEFT).value().toDouble();
-                userData.insert(ITEMS_ABOVE, topIndex);
-                userData.insert(ITEMS_TO_LEFT, ++leftIndex);
-                selectedItem->setData(Qt::UserRole, userData);
+                shouldMove = true;
                 min_max = left;
-                selectedItem->setX(min_max);
             }
             break;
         }
@@ -381,6 +438,37 @@ bool MainWindow::correctCollisions(QGraphicsItem* selectedItem, SnapDirection sn
         }
         }
     }
+
+    // Only move after deciding which is the largest
+    if(shouldMove)
+        switch(snapDirection)
+        {
+        case SNAP_UP:
+        {
+            QJsonObject userData = selectedItem->data(Qt::UserRole).toJsonObject();
+            int topIndex = (int) userData.find(ITEMS_ABOVE).value().toDouble();
+            int leftIndex = (int) userData.find(ITEMS_TO_LEFT).value().toDouble();
+            userData.insert(ITEMS_ABOVE, ++topIndex);
+            userData.insert(ITEMS_TO_LEFT, leftIndex);
+            selectedItem->setData(Qt::UserRole, userData);
+
+            selectedItem->setY(min_max);
+            break;
+        }
+        case SNAP_LEFT:
+        {
+            QJsonObject userData = selectedItem->data(Qt::UserRole).toJsonObject();
+            int topIndex = (int) userData.find(ITEMS_ABOVE).value().toDouble();
+            int leftIndex = (int) userData.find(ITEMS_TO_LEFT).value().toDouble();
+            userData.insert(ITEMS_ABOVE, topIndex);
+            userData.insert(ITEMS_TO_LEFT, ++leftIndex);
+            selectedItem->setData(Qt::UserRole, userData);
+
+            selectedItem->setX(min_max);
+        }
+        }
+
+    collidingItems = atlasScene_->collidingItems(selectedItem);
     if(collidingItems.length() > 0)
     {
         correctCollisions(selectedItem, snapDirection);
@@ -389,34 +477,44 @@ bool MainWindow::correctCollisions(QGraphicsItem* selectedItem, SnapDirection sn
     return false;
 }
 
-// Adjust 0.5 boundingRect allowance
-void MainWindow::finalizeCollisions(QGraphicsItem* selectedItem, SnapDirection snapDirection)
+void MainWindow::emptyPropertiesData()
 {
-    return;
-    switch(snapDirection)
+    ui->varNameText->setText("");
+    ui->varNameText->setEnabled(false);
+    ui->isTiledCheckBox->setChecked(false);
+    ui->isTiledCheckBox->setEnabled(false);
+    ui->nRowsText->setText("");
+    ui->nColumnsText->setText("");
+}
+
+QString MainWindow::createAndEngineCode()
+{
+    QString code;
+    code += atlasName_ + " = new BitmapTextureAtlas(getTextureManager(), ";
+    code += QString::number(currentAtlasRect_.width()) + ", " + QString::number(currentAtlasRect_.height()) + ", TextureOptions.BILINEAR);\n";
+
+    QList<QGraphicsItem*> allItems = atlasScene_->items(currentAtlasRect_);
+    foreach(QGraphicsItem* item, allItems)
     {
-    case SNAP_UP:
-    {
-        qreal posY = selectedItem->scenePos().y();
-        qDebug() << posY;
-        selectedItem->setY(selectedItem->scenePos().y() - 0.5);
-        break;
-    }
-    case SNAP_DOWN:
-    {
-        selectedItem->setY(selectedItem->sceneBoundingRect().top() + 0.5);
-        break;
-    }
-    case SNAP_LEFT:
-    {
-        selectedItem->setX(selectedItem->scenePos().x() - 0.5);
-        break;
-    }
-    case SNAP_RIGHT:
-    {
-//        selectedItem->setX(selectedItem->sceneBoundingRect().left() + 0.5);
-        break;
-    }
+        QJsonObject userData = item->data(Qt::UserRole).toJsonObject();
+        int nRows = (int) userData.find(TEXREG_NROWS).value().toDouble();
+        int nColumns = (int) userData.find(TEXREG_NCOLUMNS).value().toDouble();
+        bool isTiled = userData.find(TEXREG_IS_TILED).value().toBool();
+        QString itemName = userData.find(TEXREG_VARNAME).value().toString();
+
+        // get x and y values
+        QPointF point = item->scenePos();
+        int topIndex = (int) userData.find(ITEMS_ABOVE).value().toDouble();
+        int leftIndex = (int) userData.find(ITEMS_TO_LEFT).value().toDouble();
+
+        int xPos = (point.x() - leftIndex*0.5);
+        int yPos = (point.y() - topIndex*0.5);
+
+        QString debug = itemName + ": " + QString::number(isTiled) + " " + QString::number(nRows) + "," + QString::number(nColumns) + " at " + QString::number(xPos) + "," + QString::number(yPos);
+        qDebug() << debug;
     }
 
+
+    return code;
 }
+

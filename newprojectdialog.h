@@ -2,6 +2,7 @@
 #define NEWPROJECTDIALOG_H
 
 #include <QDialog>
+#include <QString>
 
 namespace Ui {
 class NewProjectDialog;
@@ -17,6 +18,12 @@ public:
 
 public slots:
     void launchFileDialog();
+    void accept();
+    void reject();
+
+signals:
+    void widthAndHeightValidated(int, int);
+    void sendAtlasName(QString);
     
 private:
     Ui::NewProjectDialog *ui;

@@ -25,7 +25,7 @@
    <property name="title">
     <string>AndEngine Project Location</string>
    </property>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -46,6 +46,9 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <property name="focusPolicy">
+        <enum>Qt::StrongFocus</enum>
+       </property>
        <property name="inputMask">
         <string/>
        </property>
@@ -63,28 +66,41 @@
      </item>
     </layout>
    </widget>
-   <zorder>projectPathText</zorder>
-   <zorder>toolButton</zorder>
-   <zorder>buttonBox</zorder>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>20</x>
      <y>20</y>
-     <width>531</width>
+     <width>541</width>
      <height>57</height>
     </rect>
    </property>
    <layout class="QGridLayout" name="gridLayout_3">
-    <item row="0" column="2">
-     <widget class="QDialogButtonBox" name="buttonBox">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
+    <item row="0" column="1">
+     <widget class="QGroupBox" name="groupBox_3">
+      <property name="title">
+       <string>Atlas Name</string>
       </property>
-      <property name="standardButtons">
-       <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-      </property>
+      <widget class="QWidget" name="gridLayoutWidget">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>20</y>
+         <width>211</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_4">
+        <item row="0" column="0">
+         <widget class="QLineEdit" name="atlasNameText">
+          <property name="focusPolicy">
+           <enum>Qt::StrongFocus</enum>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
     <item row="0" column="0">
@@ -108,6 +124,9 @@
              <width>50</width>
              <height>16777215</height>
             </size>
+           </property>
+           <property name="focusPolicy">
+            <enum>Qt::StrongFocus</enum>
            </property>
            <property name="inputMask">
             <string/>
@@ -138,6 +157,9 @@
              <height>16777215</height>
             </size>
            </property>
+           <property name="focusPolicy">
+            <enum>Qt::StrongFocus</enum>
+           </property>
            <property name="inputMask">
             <string notr="true"/>
            </property>
@@ -156,26 +178,30 @@
         </layout>
        </item>
       </layout>
-      <zorder>heightText</zorder>
       <zorder></zorder>
      </widget>
     </item>
-    <item row="0" column="1">
-     <spacer name="horizontalSpacer">
+    <item row="0" column="2">
+     <widget class="QDialogButtonBox" name="buttonBox">
       <property name="orientation">
-       <enum>Qt::Horizontal</enum>
+       <enum>Qt::Vertical</enum>
       </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>40</width>
-        <height>20</height>
-       </size>
+      <property name="standardButtons">
+       <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
       </property>
-     </spacer>
+     </widget>
     </item>
    </layout>
   </widget>
  </widget>
+ <tabstops>
+  <tabstop>widthText</tabstop>
+  <tabstop>heightText</tabstop>
+  <tabstop>atlasNameText</tabstop>
+  <tabstop>projectPathText</tabstop>
+  <tabstop>toolButton</tabstop>
+  <tabstop>buttonBox</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
@@ -185,7 +211,7 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>475</x>
+     <x>559</x>
      <y>75</y>
     </hint>
     <hint type="destinationlabel">
