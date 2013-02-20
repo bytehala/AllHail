@@ -8,6 +8,7 @@
 #include <QFileInfoList>
 #include <QLabel>
 #include "newprojectdialog.h"
+#include "testoutputdialog.h"
 
 namespace Ui {
 class MainWindow;
@@ -25,6 +26,7 @@ public:
 
 public slots:
     void newProjectDialog();
+    void showTestOutput();
     void updatePreview(QListWidgetItem* item);
     void addToScene();
     void sceneItemDragged();
@@ -36,11 +38,12 @@ public slots:
     void updateStatusBarText();
     void drawAtlasBox(int, int);
     void updateItemProperties();
-    void receiveAtlasName(QString);
+    void receiveDirAndAtlasName(QString, QString);
     QString createAndEngineCode(); // TODO: temporary??
 
 signals:
     void dataShouldUpdate(QString, int, int, bool);
+    void sendTestOutput(QString);
 
 
 private:
@@ -60,7 +63,8 @@ private:
     QLabel* statusBarText_;
     bool isScaledDown_;
     float currentScale_;
-    NewProjectDialog *dialog;
+//    NewProjectDialog *dialog;
+    QString andEngineCode_;
 
     // Parsing related
     QString atlasName_;
@@ -72,6 +76,7 @@ private:
     static const QString TEXREG_NCOLUMNS;
     static const QString TEXREG_VARNAME;
     static const QString TEXREG_IS_TILED;
+    static const QString TEXREG_RESOURCENAME;
 
     void setPreviewScene(QGraphicsScene*);
     void updatePreview(int);
@@ -82,6 +87,7 @@ private:
     void finalizeCollisions(QGraphicsItem*, enum SnapDirection);
     void updatePropertiesData(QGraphicsItem*);
     void emptyPropertiesData();
+    void deleteItem();
 };
 
 #endif // MAINWINDOW_H

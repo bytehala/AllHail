@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>583</width>
-    <height>188</height>
+    <height>250</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -47,13 +47,13 @@
         </sizepolicy>
        </property>
        <property name="focusPolicy">
-        <enum>Qt::StrongFocus</enum>
+        <enum>Qt::NoFocus</enum>
        </property>
        <property name="inputMask">
         <string/>
        </property>
        <property name="readOnly">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -96,6 +96,9 @@
          <widget class="QLineEdit" name="atlasNameText">
           <property name="focusPolicy">
            <enum>Qt::StrongFocus</enum>
+          </property>
+          <property name="placeholderText">
+           <string>e.g. mBitmapTextureAtlas</string>
           </property>
          </widget>
         </item>
@@ -193,13 +196,36 @@
     </item>
    </layout>
   </widget>
+  <widget class="QGroupBox" name="groupBox_4">
+   <property name="geometry">
+    <rect>
+     <x>330</x>
+     <y>180</y>
+     <width>231</width>
+     <height>61</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>BaseGameActivity Class Name</string>
+   </property>
+   <widget class="QComboBox" name="javaFilesDropdown">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>211</width>
+      <height>22</height>
+     </rect>
+    </property>
+   </widget>
+  </widget>
  </widget>
  <tabstops>
   <tabstop>widthText</tabstop>
   <tabstop>heightText</tabstop>
   <tabstop>atlasNameText</tabstop>
-  <tabstop>projectPathText</tabstop>
   <tabstop>toolButton</tabstop>
+  <tabstop>javaFilesDropdown</tabstop>
   <tabstop>buttonBox</tabstop>
  </tabstops>
  <resources/>

@@ -15,14 +15,17 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     newprojectdialog.cpp \
-    textureregiondialog.cpp
+    textureregiondialog.cpp \
+    testoutputdialog.cpp
 
 HEADERS  += mainwindow.h \
     newprojectdialog.h \
-    textureregiondialog.h
+    textureregiondialog.h \
+    testoutputdialog.h
 
 FORMS    += mainwindow.ui \
     newprojectdialog.ui \
-    textureregiondialog.ui
+    textureregiondialog.ui \
+    testoutputdialog.ui
 
 DEFINES *= QT_USE_QSTRINGBUILDER

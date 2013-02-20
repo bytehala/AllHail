@@ -22,6 +22,7 @@ const QString MainWindow::TEXREG_NROWS("nRows");
 const QString MainWindow::TEXREG_NCOLUMNS("nColumns");
 const QString MainWindow::TEXREG_VARNAME("varName");
 const QString MainWindow::TEXREG_IS_TILED("bIsTiled");
+const QString MainWindow::TEXREG_RESOURCENAME("resName");
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -55,9 +56,10 @@ MainWindow::MainWindow(QWidget *parent) :
 //    atlasScene_->installEventFilter(this);
 
     // DEBUG CODE
-    drawAtlasBox(512, 512);
-    projectPath_ = "C:/Users/lemuel.dulfo/workspace/RuleThemAll" ;
-    createProject();
+//    atlasName_ = "mBitmapTextureAtlas";
+//    drawAtlasBox(800, 512);
+//    projectPath_ = "C:/Users/lemuel.dulfo/workspace/FishDish" ;
+//    createProject();
 
     connect(atlasScene_, SIGNAL(selectionChanged()), this, SLOT(selectAnother()));
     connect(atlasScene_, SIGNAL(selectionChanged()), this, SLOT(updateStatusBarText()));
@@ -83,11 +85,20 @@ bool MainWindow::eventFilter(QObject *object, QEvent *event)
     return false;
  }
 
+void MainWindow::showTestOutput()
+{
+    TestOutputDialog dialog(this);
+    connect(this, SIGNAL(sendTestOutput(QString)), &dialog, SLOT(receiveText(QString)));
+    emit sendTestOutput(andEngineCode_);
+    //connect(&dialog, SIGNAL())
+    dialog.exec();
+}
+
 void MainWindow::newProjectDialog()
 {
     NewProjectDialog dialog(this);
     connect(&dialog, SIGNAL(widthAndHeightValidated(int, int)), this, SLOT(drawAtlasBox(int,int)));
-    connect(&dialog, SIGNAL(sendAtlasName(QString)), this, SLOT(receiveAtlasName(QString)));
+    connect(&dialog, SIGNAL(sendDirAndAtlasName(QString, QString)), this, SLOT(receiveDirAndAtlasName(QString, QString)));
     dialog.exec();
 }
 
@@ -164,9 +175,11 @@ void MainWindow::updatePropertiesData(QGraphicsItem * item)
 
 // Slots
 
-void MainWindow::receiveAtlasName(QString atlasName)
+void MainWindow::receiveDirAndAtlasName(QString dirPath, QString atlasName)
 {
     atlasName_ = atlasName;
+    projectPath_ = dirPath;
+    createProject();
 }
 
 // When toolbar data updates, call this so that item data updates
@@ -310,8 +323,18 @@ void MainWindow::addToScene()
             qDebug() << "Cannot add larger image.";
         else
         {
+//            QGraphicsPixmapItem pxItem(pixMap);
+//            pxItem.setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
+//            QJsonObject userData;
+//            userData.insert(TEXREG_RESOURCENAME, imageFileNames_.at(item->data(Qt::UserRole).toInt()));
+//            pxItem.setData(Qt::UserRole, userData);
+//            atlasScene_->addItem(&pxItem);
+            QGraphicsPixmapItem* returnedItem = atlasScene_->addPixmap(pixMap);
+            returnedItem->setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
+            QJsonObject userData;
+            userData.insert(TEXREG_RESOURCENAME, imageFileNames_.at(item->data(Qt::UserRole).toInt()));
+            returnedItem->setData(Qt::UserRole, userData);
 
-            atlasScene_->addPixmap(pixMap)->setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
         }
     }
 }
@@ -355,7 +378,21 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
         break;
     case 16777216: // Esc key
         this->close();
-        //qDebug() << event->key();
+        break;
+    case 16777223: // Del key
+        deleteItem();
+        break;
+    default:
+        qDebug() << event->key();
+    }
+}
+
+void MainWindow::deleteItem()
+{
+    QList<QGraphicsItem*> selectedList = atlasScene_->selectedItems();
+    foreach(QGraphicsItem* selectedItem, selectedList)
+    {
+        atlasScene_->removeItem(selectedItem);
     }
 }
 
@@ -445,6 +482,8 @@ bool MainWindow::correctCollisions(QGraphicsItem* selectedItem, SnapDirection sn
         {
         case SNAP_UP:
         {
+            if(min_max > currentAtlasRect_.bottom())
+                return false;
             QJsonObject userData = selectedItem->data(Qt::UserRole).toJsonObject();
             int topIndex = (int) userData.find(ITEMS_ABOVE).value().toDouble();
             int leftIndex = (int) userData.find(ITEMS_TO_LEFT).value().toDouble();
@@ -457,6 +496,8 @@ bool MainWindow::correctCollisions(QGraphicsItem* selectedItem, SnapDirection sn
         }
         case SNAP_LEFT:
         {
+            if(min_max > currentAtlasRect_.right())
+                return false;
             QJsonObject userData = selectedItem->data(Qt::UserRole).toJsonObject();
             int topIndex = (int) userData.find(ITEMS_ABOVE).value().toDouble();
             int leftIndex = (int) userData.find(ITEMS_TO_LEFT).value().toDouble();
@@ -489,18 +530,49 @@ void MainWindow::emptyPropertiesData()
 
 QString MainWindow::createAndEngineCode()
 {
-    QString code;
-    code += atlasName_ + " = new BitmapTextureAtlas(getTextureManager(), ";
-    code += QString::number(currentAtlasRect_.width()) + ", " + QString::number(currentAtlasRect_.height()) + ", TextureOptions.BILINEAR);\n";
-
+    QString code("");
+    QString itemName;
+    bool isTiled;
+    ////////////////////////////////////////////////////////////////////////
+    code += "// Field Declarations \nprivate BitmapTextureAtlas " + atlasName_ + ";\n";
+    // Loop here
     QList<QGraphicsItem*> allItems = atlasScene_->items(currentAtlasRect_);
+    foreach(QGraphicsItem* item, allItems)
+    {
+        QJsonObject userData = item->data(Qt::UserRole).toJsonObject();
+        isTiled = userData.find(TEXREG_IS_TILED).value().toBool();
+        itemName = userData.find(TEXREG_VARNAME).value().toString();
+        if(itemName.isEmpty())
+            itemName = "NAMELESS";
+
+        code += "private ";
+        if(isTiled)
+            code += "Tiled";
+        code += "TextureRegion " + itemName + ";\n";
+    }
+    ////////////////////////////////////////////////////////////////////////
+
+
+    code += "\n\n";
+    code += "// Put these in onCreateResources()\n";
+    code += "BitmapTextureAtlasTextureRegionFactory.setAssetBasePath(\"gfx/\")";
+    code += "\n\n";
+
+    code += atlasName_ + " = new BitmapTextureAtlas(getTextureManager(), " + \
+        QString::number(currentAtlasRect_.width()) + ", " + \
+        QString::number(currentAtlasRect_.height()) + ", TextureOptions.BILINEAR);\n";
+
+//    allItems = atlasScene_->items(currentAtlasRect_);
     foreach(QGraphicsItem* item, allItems)
     {
         QJsonObject userData = item->data(Qt::UserRole).toJsonObject();
         int nRows = (int) userData.find(TEXREG_NROWS).value().toDouble();
         int nColumns = (int) userData.find(TEXREG_NCOLUMNS).value().toDouble();
-        bool isTiled = userData.find(TEXREG_IS_TILED).value().toBool();
-        QString itemName = userData.find(TEXREG_VARNAME).value().toString();
+        isTiled = userData.find(TEXREG_IS_TILED).value().toBool();
+        QString resName = QFileInfo(userData.find(TEXREG_RESOURCENAME).value().toString()).fileName();
+        itemName = userData.find(TEXREG_VARNAME).value().toString();
+        if(itemName.isEmpty())
+            itemName = "NAMELESS";
 
         // get x and y values
         QPointF point = item->scenePos();
@@ -510,10 +582,32 @@ QString MainWindow::createAndEngineCode()
         int xPos = (point.x() - leftIndex*0.5);
         int yPos = (point.y() - topIndex*0.5);
 
-        QString debug = itemName + ": " + QString::number(isTiled) + " " + QString::number(nRows) + "," + QString::number(nColumns) + " at " + QString::number(xPos) + "," + QString::number(yPos);
-        qDebug() << debug;
+        int width = item->boundingRect().width() - 1; // Default bounding rect stroke is 1
+        int height = item->boundingRect().height() - 1; // Default bounding rect stroke is 1
+
+
+        code += itemName + " = BitmapTextureAtlasTextureRegionFactory.create";
+        if(isTiled)
+        {
+            code += "Tiled";
+        }
+        code += "FromAsset(" + atlasName_ + ", this, \"" \
+                + resName + "\", " \
+                + QString::number(xPos) + ", " + QString::number(yPos);
+        if(isTiled)
+        {
+            code += ", " + QString::number(nColumns) + ", " + QString::number(nRows);
+        }
+        code += "); //" + QString::number(width) + "x" + QString::number(height) + "\n";
+
+        //qDebug() << debug;
     }
 
+    code += atlasName_ + ".load();";
+
+    qDebug() << code;
+    andEngineCode_ = code;
+    showTestOutput();
 
     return code;
 }

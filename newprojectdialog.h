@@ -23,10 +23,13 @@ public slots:
 
 signals:
     void widthAndHeightValidated(int, int);
-    void sendAtlasName(QString);
+    void sendDirAndAtlasName(QString, QString);
     
 private:
     Ui::NewProjectDialog *ui;
+    QString dirPath_;
+
+    void populateDropdown(QString);
 };
 
 #endif // NEWPROJECTDIALOG_H
