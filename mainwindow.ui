@@ -20,7 +20,7 @@
    <bool>true</bool>
   </property>
   <property name="windowTitle">
-   <string>AllHail</string>
+   <string>Hale (Alpha)</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <property name="sizePolicy">
@@ -49,7 +49,7 @@
         <property name="title">
          <string>Snap</string>
         </property>
-        <widget class="QWidget" name="">
+        <widget class="QWidget" name="layoutWidget">
          <property name="geometry">
           <rect>
            <x>10</x>
@@ -108,6 +108,9 @@
           </item>
           <item row="1" column="0">
            <widget class="QPushButton" name="leftButton">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -127,6 +130,9 @@
           </item>
           <item row="0" column="1">
            <widget class="QPushButton" name="upButton">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -378,9 +384,13 @@
     </property>
     <addaction name="actionNew_Project"/>
     <addaction name="actionOpen_Project"/>
+    <addaction name="actionClose_Project"/>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuProject">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="title">
      <string>Project</string>
     </property>
@@ -422,6 +432,9 @@
    </property>
   </action>
   <action name="actionTest_Output">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Test Output</string>
    </property>
@@ -432,6 +445,14 @@
    </property>
    <property name="text">
     <string>Inject to Code</string>
+   </property>
+  </action>
+  <action name="actionClose_Project">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Close Project</string>
    </property>
   </action>
  </widget>
@@ -523,8 +544,8 @@
    <slot>addToScene()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>751</x>
-     <y>276</y>
+     <x>862</x>
+     <y>385</y>
     </hint>
     <hint type="destinationlabel">
      <x>126</x>
@@ -539,8 +560,8 @@
    <slot>snapUp()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>575</x>
-     <y>197</y>
+     <x>686</x>
+     <y>217</y>
     </hint>
     <hint type="destinationlabel">
      <x>171</x>
@@ -555,8 +576,8 @@
    <slot>snapDown()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>575</x>
-     <y>255</y>
+     <x>686</x>
+     <y>275</y>
     </hint>
     <hint type="destinationlabel">
      <x>171</x>
@@ -571,8 +592,8 @@
    <slot>snapLeft()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>534</x>
-     <y>226</y>
+     <x>650</x>
+     <y>246</y>
     </hint>
     <hint type="destinationlabel">
      <x>172</x>
@@ -587,8 +608,8 @@
    <slot>snapRight()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>616</x>
-     <y>226</y>
+     <x>722</x>
+     <y>246</y>
     </hint>
     <hint type="destinationlabel">
      <x>272</x>
@@ -603,8 +624,8 @@
    <slot>updateStatusBarText()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>575</x>
-     <y>255</y>
+     <x>686</x>
+     <y>275</y>
     </hint>
     <hint type="destinationlabel">
      <x>240</x>
@@ -619,8 +640,8 @@
    <slot>updateStatusBarText()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>616</x>
-     <y>226</y>
+     <x>722</x>
+     <y>246</y>
     </hint>
     <hint type="destinationlabel">
      <x>282</x>
@@ -635,8 +656,8 @@
    <slot>updateStatusBarText()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>575</x>
-     <y>197</y>
+     <x>686</x>
+     <y>217</y>
     </hint>
     <hint type="destinationlabel">
      <x>253</x>
@@ -651,8 +672,8 @@
    <slot>updateStatusBarText()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>534</x>
-     <y>226</y>
+     <x>650</x>
+     <y>246</y>
     </hint>
     <hint type="destinationlabel">
      <x>198</x>
@@ -667,8 +688,8 @@
    <slot>updateItemProperties()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>548</x>
-     <y>150</y>
+     <x>680</x>
+     <y>163</y>
     </hint>
     <hint type="destinationlabel">
      <x>511</x>
@@ -683,8 +704,8 @@
    <slot>updateItemProperties()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>524</x>
-     <y>126</y>
+     <x>680</x>
+     <y>132</y>
     </hint>
     <hint type="destinationlabel">
      <x>493</x>
@@ -699,8 +720,8 @@
    <slot>updateItemProperties()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>513</x>
-     <y>100</y>
+     <x>689</x>
+     <y>109</y>
     </hint>
     <hint type="destinationlabel">
      <x>498</x>
@@ -715,8 +736,8 @@
    <slot>updateItemProperties()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>573</x>
-     <y>71</y>
+     <x>850</x>
+     <y>82</y>
     </hint>
     <hint type="destinationlabel">
      <x>496</x>
@@ -731,12 +752,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>543</x>
-     <y>101</y>
+     <x>689</x>
+     <y>109</y>
     </hint>
     <hint type="destinationlabel">
-     <x>539</x>
-     <y>122</y>
+     <x>680</x>
+     <y>132</y>
     </hint>
    </hints>
   </connection>
@@ -747,12 +768,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>543</x>
-     <y>101</y>
+     <x>689</x>
+     <y>109</y>
     </hint>
     <hint type="destinationlabel">
-     <x>539</x>
-     <y>153</y>
+     <x>680</x>
+     <y>163</y>
     </hint>
    </hints>
   </connection>
@@ -788,6 +809,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionClose_Project</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>closeProject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>437</x>
+     <y>307</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>launchFileDialog()</slot>
@@ -801,5 +838,6 @@
   <slot>newProjectDialog()</slot>
   <slot>updateItemProperties()</slot>
   <slot>createAndEngineCode()</slot>
+  <slot>closeProject()</slot>
  </slots>
 </ui>

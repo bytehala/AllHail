@@ -40,6 +40,7 @@ public slots:
     void updateItemProperties();
     void receiveDirAndAtlasName(QString, QString);
     QString createAndEngineCode(); // TODO: temporary??
+    void closeProject();
 
 signals:
     void dataShouldUpdate(QString, int, int, bool);
@@ -63,6 +64,7 @@ private:
     QLabel* statusBarText_;
     bool isScaledDown_;
     float currentScale_;
+    bool isProjectOpen_;
 //    NewProjectDialog *dialog;
     QString andEngineCode_;
 
@@ -88,6 +90,7 @@ private:
     void updatePropertiesData(QGraphicsItem*);
     void emptyPropertiesData();
     void deleteItem();
+    void enableSnapButtons(bool);
 };
 
 #endif // MAINWINDOW_H

@@ -28,6 +28,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+    isProjectOpen_ = false;
     isScaledDown_ = false;
 
     ui->setupUi(this);
@@ -102,11 +103,37 @@ void MainWindow::newProjectDialog()
     dialog.exec();
 }
 
+void MainWindow::closeProject()
+{
+    if(isProjectOpen_)
+    {
+        atlasScene_->clear();
+        atlasName_ = "";
+        projectPath_ = "";
+        imageFileNames_.clear();
+        fileNames_.clear();
+        previewView_->scene()->clear();
+        previewList_.clear();
+        imagesListWidget_->clear();
+        currentAtlasRect_ = QRectF();
+
+        isProjectOpen_ = false;
+        ui->actionClose_Project->setEnabled(false);
+        ui->menuProject->setEnabled(false);
+        ui->actionNew_Project->setEnabled(true);
+    }
+}
 
 void MainWindow::createProject()
 {
-    if ( projectPath_.isNull() == false )
+    if ( projectPath_.isEmpty() == false )
     {
+        ui->actionTest_Output->setEnabled(true);
+        isProjectOpen_ = true;
+        ui->actionClose_Project->setEnabled(true);
+        ui->menuProject->setEnabled(true);
+        ui->actionNew_Project->setEnabled(false);
+
         QFile myFile("proj1.ahp");
         myFile.open(QIODevice::WriteOnly);
         QString message = "<allhailproject>";
@@ -295,12 +322,14 @@ void MainWindow::selectAnother()
     {
         selectedGraphicsItem_ = selectedItems_.at(0);
         updatePropertiesData(selectedGraphicsItem_);
+        enableSnapButtons(true);
     }
     else // There is exactly one selected item
     {
         // This is good enough.
         atlasScene_->clearSelection();
         emptyPropertiesData();
+        enableSnapButtons(false);
         selectedGraphicsItem_ = NULL;
     }
 }
@@ -345,7 +374,8 @@ void MainWindow::updatePreview(int itemIndex)
 }
 
 void MainWindow::updatePreview(QListWidgetItem *item){
-    setPreviewScene(previewList_.at(item->data(Qt::UserRole).toInt()));
+    if(item != NULL)
+        setPreviewScene(previewList_.at(item->data(Qt::UserRole).toInt()));
 }
 
 void MainWindow::setPreviewScene(QGraphicsScene* scene)
@@ -518,6 +548,12 @@ bool MainWindow::correctCollisions(QGraphicsItem* selectedItem, SnapDirection sn
     return false;
 }
 
+void MainWindow::enableSnapButtons(bool enabled = true)
+{
+    ui->leftButton->setEnabled(enabled);
+    ui->upButton->setEnabled(enabled);
+}
+
 void MainWindow::emptyPropertiesData()
 {
     ui->varNameText->setText("");
@@ -611,4 +647,6 @@ QString MainWindow::createAndEngineCode()
 
     return code;
 }
+
+
 
