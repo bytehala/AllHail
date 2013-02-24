@@ -383,6 +383,7 @@
      <string>File</string>
     </property>
     <addaction name="actionNew_Project"/>
+    <addaction name="actionSave_Project"/>
     <addaction name="actionOpen_Project"/>
     <addaction name="actionClose_Project"/>
     <addaction name="actionExit"/>
@@ -420,7 +421,7 @@
   </action>
   <action name="actionOpen_Project">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="text">
     <string>Open Project</string>
@@ -453,6 +454,14 @@
    </property>
    <property name="text">
     <string>Close Project</string>
+   </property>
+  </action>
+  <action name="actionSave_Project">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Save Project</string>
    </property>
   </action>
  </widget>
@@ -522,22 +531,6 @@
    </hints>
   </connection>
   <connection>
-   <sender>listWidget</sender>
-   <signal>currentItemChanged(QListWidgetItem*,QListWidgetItem*)</signal>
-   <receiver>MainWindow</receiver>
-   <slot>updatePreview(QListWidgetItem*)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>751</x>
-     <y>247</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>218</x>
-     <y>203</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>pushButton</sender>
    <signal>clicked()</signal>
    <receiver>MainWindow</receiver>
@@ -586,22 +579,6 @@
    </hints>
   </connection>
   <connection>
-   <sender>leftButton</sender>
-   <signal>clicked()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>snapLeft()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>650</x>
-     <y>246</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>172</x>
-     <y>174</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>rightButton</sender>
    <signal>clicked()</signal>
    <receiver>MainWindow</receiver>
@@ -614,70 +591,6 @@
     <hint type="destinationlabel">
      <x>272</x>
      <y>164</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>downButton</sender>
-   <signal>clicked()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>updateStatusBarText()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>686</x>
-     <y>275</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>240</x>
-     <y>184</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rightButton</sender>
-   <signal>clicked()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>updateStatusBarText()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>722</x>
-     <y>246</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>282</x>
-     <y>87</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>upButton</sender>
-   <signal>clicked()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>updateStatusBarText()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>686</x>
-     <y>217</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>253</x>
-     <y>170</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>leftButton</sender>
-   <signal>clicked()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>updateStatusBarText()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>650</x>
-     <y>246</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>198</x>
-     <y>168</y>
     </hint>
    </hints>
   </connection>
@@ -710,22 +623,6 @@
     <hint type="destinationlabel">
      <x>493</x>
      <y>251</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>isTiledCheckBox</sender>
-   <signal>stateChanged(int)</signal>
-   <receiver>MainWindow</receiver>
-   <slot>updateItemProperties()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>689</x>
-     <y>109</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>498</x>
-     <y>211</y>
     </hint>
    </hints>
   </connection>
@@ -825,6 +722,86 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionSave_Project</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>saveProject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>437</x>
+     <y>307</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>listWidget</sender>
+   <signal>currentItemChanged(QListWidgetItem*,QListWidgetItem*)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>updatePreview(QListWidgetItem*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>751</x>
+     <y>247</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>218</x>
+     <y>203</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>leftButton</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>snapLeft()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>650</x>
+     <y>246</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>172</x>
+     <y>174</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>isTiledCheckBox</sender>
+   <signal>stateChanged(int)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>updateItemProperties()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>689</x>
+     <y>109</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>498</x>
+     <y>211</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionOpen_Project</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>loadProject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>437</x>
+     <y>307</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>launchFileDialog()</slot>
@@ -839,5 +816,7 @@
   <slot>updateItemProperties()</slot>
   <slot>createAndEngineCode()</slot>
   <slot>closeProject()</slot>
+  <slot>saveProject()</slot>
+  <slot>loadProject()</slot>
  </slots>
 </ui>

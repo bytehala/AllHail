@@ -41,6 +41,8 @@ public slots:
     void receiveDirAndAtlasName(QString, QString);
     QString createAndEngineCode(); // TODO: temporary??
     void closeProject();
+    void saveProject();
+    void loadProject();
 
 signals:
     void dataShouldUpdate(QString, int, int, bool);
@@ -79,6 +81,22 @@ private:
     static const QString TEXREG_VARNAME;
     static const QString TEXREG_IS_TILED;
     static const QString TEXREG_RESOURCENAME;
+
+    static const QString PROJECT_ELEMENT;
+    static const QString PROJECT_ATTR_LOCATION;
+    static const QString PROJECT_ATTR_MAINCLASS;
+    static const QString ATLAS_ELEMENT;
+    static const QString ATLAS_ATTR_NAME;
+    static const QString ATLAS_ATTR_WIDTH;
+    static const QString ATLAS_ATTR_HEIGHT;
+    static const QString TEXTUREREGION_ELEMENT;
+    static const QString TEXTUREREGION_ATTR_TILED;
+    static const QString TEXTUREREGION_ATTR_ROWS;
+    static const QString TEXTUREREGION_ATTR_COLUMNS;
+    static const QString TEXTUREREGION_ATTR_RESNAME;
+    static const QString TEXTUREREGION_ATTR_ITEMNAME;
+    static const QString TEXTUREREGION_ATTR_SCENEX;
+    static const QString TEXTUREREGION_ATTR_SCENEY;
 
     void setPreviewScene(QGraphicsScene*);
     void updatePreview(int);

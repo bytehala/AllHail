@@ -6,6 +6,7 @@
 #include <QDebug>
 #include <QFileDialog>
 #include <QJsonObject>
+#include <QXmlStreamWriter>
 
 enum SnapDirection
 {
@@ -23,6 +24,22 @@ const QString MainWindow::TEXREG_NCOLUMNS("nColumns");
 const QString MainWindow::TEXREG_VARNAME("varName");
 const QString MainWindow::TEXREG_IS_TILED("bIsTiled");
 const QString MainWindow::TEXREG_RESOURCENAME("resName");
+
+const QString MainWindow::PROJECT_ELEMENT("AllHailProject");
+const QString MainWindow::PROJECT_ATTR_LOCATION("projectLocation");
+const QString MainWindow::PROJECT_ATTR_MAINCLASS("mainClass");
+const QString MainWindow::ATLAS_ELEMENT("Atlas");
+const QString MainWindow::ATLAS_ATTR_NAME("name");
+const QString MainWindow::ATLAS_ATTR_WIDTH("width");
+const QString MainWindow::ATLAS_ATTR_HEIGHT("height");
+const QString MainWindow::TEXTUREREGION_ELEMENT("TextureRegion");
+const QString MainWindow::TEXTUREREGION_ATTR_TILED("isTiled");
+const QString MainWindow::TEXTUREREGION_ATTR_ROWS("rows");
+const QString MainWindow::TEXTUREREGION_ATTR_COLUMNS("columns");
+const QString MainWindow::TEXTUREREGION_ATTR_RESNAME("resName");
+const QString MainWindow::TEXTUREREGION_ATTR_ITEMNAME("itemName");
+const QString MainWindow::TEXTUREREGION_ATTR_SCENEX("sceneX");
+const QString MainWindow::TEXTUREREGION_ATTR_SCENEY("sceneY");
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -44,6 +61,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QImage image;
     image.load("C:/Users/lemuel.dulfo/workspace/RuleThemAll/assets/gfx/face_triangle_tiled.png");
     atlasScene_ = new QGraphicsScene();
+    atlasScene_->setBackgroundBrush(Qt::gray);
     atlasScene_->setSceneRect(0, 0, 100, 100);
     atlasView_ = ui->atlasView;
     atlasView_->setAlignment(Qt::AlignTop | Qt::AlignLeft);
@@ -118,9 +136,11 @@ void MainWindow::closeProject()
         currentAtlasRect_ = QRectF();
 
         isProjectOpen_ = false;
+        ui->actionOpen_Project->setEnabled(true);
         ui->actionClose_Project->setEnabled(false);
         ui->menuProject->setEnabled(false);
         ui->actionNew_Project->setEnabled(true);
+        ui->actionSave_Project->setEnabled(false);
     }
 }
 
@@ -130,21 +150,11 @@ void MainWindow::createProject()
     {
         ui->actionTest_Output->setEnabled(true);
         isProjectOpen_ = true;
+        ui->actionOpen_Project->setEnabled(false);
         ui->actionClose_Project->setEnabled(true);
         ui->menuProject->setEnabled(true);
         ui->actionNew_Project->setEnabled(false);
-
-        QFile myFile("proj1.ahp");
-        myFile.open(QIODevice::WriteOnly);
-        QString message = "<allhailproject>";
-        message += "\n";
-        message += "<rootdir value=\"";
-        message += projectPath_;
-        message += "\" />";
-        message += "\n";
-        message += "</allhailproject>";
-        myFile.write(message.toUtf8().constData());
-        myFile.close();
+        ui->actionSave_Project->setEnabled(true);
 
         QDir gfxDir(projectPath_ + "\\assets\\gfx\\");
         fileNames_ = gfxDir.entryInfoList(QStringList("*.png"));
@@ -169,6 +179,145 @@ void MainWindow::createProject()
 
         //updatePreview(0);
     }
+}
+
+void MainWindow::saveProject()
+{
+    // TODO: make user select filename... not proj1.ahp
+    QFile outputFile("proj1.ahp");
+    outputFile.open(QIODevice::WriteOnly);
+
+    QXmlStreamWriter stream(&outputFile);
+    stream.setAutoFormatting(true);
+    stream.writeStartDocument();
+
+    stream.writeStartElement(PROJECT_ELEMENT);
+    stream.writeAttribute(PROJECT_ATTR_LOCATION, projectPath_);
+    stream.writeAttribute(PROJECT_ATTR_MAINCLASS, "Test.java");
+
+    stream.writeStartElement(ATLAS_ELEMENT);
+    stream.writeAttribute(ATLAS_ATTR_NAME, atlasName_);
+    stream.writeAttribute(ATLAS_ATTR_WIDTH, QString::number(currentAtlasRect_.width()));
+    stream.writeAttribute(ATLAS_ATTR_HEIGHT, QString::number(currentAtlasRect_.height()));
+
+    QList<QGraphicsItem*> allItems = atlasScene_->items(currentAtlasRect_);
+    foreach(QGraphicsItem* item, allItems)
+    {
+        QJsonObject userData = item->data(Qt::UserRole).toJsonObject();
+        int nRows = (int) userData.find(TEXREG_NROWS).value().toDouble();
+        int nColumns = (int) userData.find(TEXREG_NCOLUMNS).value().toDouble();
+        bool isTiled = userData.find(TEXREG_IS_TILED).value().toBool();
+        QString resName = QFileInfo(userData.find(TEXREG_RESOURCENAME).value().toString()).fileName();
+        QString itemName = userData.find(TEXREG_VARNAME).value().toString();
+        QString tiledString("false");
+        if(isTiled)
+            tiledString = "true";
+
+        // get x and y values
+        QPointF point = item->scenePos();
+        int topIndex = (int) userData.find(ITEMS_ABOVE).value().toDouble();
+        int leftIndex = (int) userData.find(ITEMS_TO_LEFT).value().toDouble();
+        int sceneX = (point.x() - 0.5*leftIndex);
+        int sceneY = (point.y() - 0.5*topIndex);
+
+        stream.writeStartElement(TEXTUREREGION_ELEMENT);
+        stream.writeAttribute(TEXTUREREGION_ATTR_TILED, tiledString);
+        stream.writeAttribute(TEXTUREREGION_ATTR_ROWS, QString::number(nRows));
+        stream.writeAttribute(TEXTUREREGION_ATTR_COLUMNS, QString::number(nColumns));
+        stream.writeAttribute(TEXTUREREGION_ATTR_RESNAME, resName);
+        stream.writeAttribute(TEXTUREREGION_ATTR_ITEMNAME, itemName);
+        stream.writeAttribute(TEXTUREREGION_ATTR_SCENEX, QString::number(sceneX));
+        stream.writeAttribute(TEXTUREREGION_ATTR_SCENEY, QString::number(sceneY));
+        stream.writeAttribute(ITEMS_ABOVE, QString::number(topIndex));
+        stream.writeAttribute(ITEMS_TO_LEFT, QString::number(leftIndex));
+        stream.writeEndElement(); //TextureRegion
+    }
+
+    stream.writeEndElement(); //Atlas
+
+    stream.writeEndElement(); // AllHailProject
+    stream.writeEndDocument();
+
+    outputFile.close();
+}
+
+void MainWindow::loadProject()
+{
+    qDebug() << "load";
+    QFile inputFile("proj1.ahp");
+    inputFile.open(QIODevice::ReadOnly);
+
+     QXmlStreamReader xml(&inputFile);
+     while (!xml.atEnd())
+     {
+         xml.readNext();
+         // do processing
+
+         if(xml.tokenString() != "StartElement")
+             continue;
+         if(xml.name().toString() == PROJECT_ELEMENT)
+         {
+             QXmlStreamAttributes attribs = xml.attributes();
+             projectPath_ = attribs.value(PROJECT_ATTR_LOCATION).toString();
+         }
+         else if(xml.name().toString() == ATLAS_ELEMENT)
+         {
+             QXmlStreamAttributes attribs = xml.attributes();
+             int atlasWidth = attribs.value(ATLAS_ATTR_WIDTH).toString().toInt();
+             int atlasHeight = attribs.value(ATLAS_ATTR_HEIGHT).toString().toInt();
+             drawAtlasBox(atlasWidth, atlasHeight);
+             atlasName_ = attribs.value(ATLAS_ATTR_NAME).toString();
+         }
+         else if(xml.name().toString() == TEXTUREREGION_ELEMENT)
+         {
+             QXmlStreamAttributes attribs = xml.attributes();
+
+             // Image properties
+             QString resName = attribs.value(TEXTUREREGION_ATTR_RESNAME).toString();
+             int sceneX = attribs.value(TEXTUREREGION_ATTR_SCENEX).toString().toInt();
+             int sceneY = attribs.value(TEXTUREREGION_ATTR_SCENEY).toString().toInt();
+
+             // TextureRegion properties
+             QString itemName = attribs.value(TEXTUREREGION_ATTR_ITEMNAME).toString();
+             QString tiledString = attribs.value(TEXTUREREGION_ATTR_TILED).toString();
+             bool isTiled = false;
+             if(tiledString == "true")
+                 isTiled = true;
+             int rows = attribs.value(TEXTUREREGION_ATTR_ROWS).toString().toInt();
+             int columns = attribs.value(TEXTUREREGION_ATTR_COLUMNS).toString().toInt();
+
+             qreal leftOffset = attribs.value(ITEMS_TO_LEFT).toString().toFloat();
+             qreal topOffset = attribs.value(ITEMS_ABOVE).toString().toFloat();
+
+             // Create Pixmap from
+             QImage image;
+             bool loaded = image.load(projectPath_ + "/assets/gfx/" + resName);
+             if(loaded)
+             {
+                QPixmap pixmap = QPixmap::fromImage(image);
+                QGraphicsItem* pixmapItem = atlasScene_->addPixmap(pixmap);
+                pixmapItem->setFlags((QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable));
+                pixmapItem->setPos(sceneX + 0.5*leftOffset, sceneY + 0.5*topOffset);
+
+                QJsonObject userData;
+                userData.insert(TEXREG_RESOURCENAME, resName);
+                userData.insert(ITEMS_ABOVE, topOffset);
+                userData.insert(ITEMS_TO_LEFT, leftOffset);
+                userData.insert(TEXREG_NCOLUMNS, columns);
+                userData.insert(TEXREG_NROWS, rows);
+                userData.insert(TEXREG_VARNAME, itemName);
+                userData.insert(TEXREG_IS_TILED, isTiled);
+                pixmapItem->setData(Qt::UserRole, userData);
+             }
+         }
+     }
+     if (xml.hasError()) {
+         // do error handling
+     }
+
+    inputFile.close();
+    isProjectOpen_ = true;
+    createProject();
 }
 
 // When selection has changed, call this so that the toolbar data updates
@@ -210,6 +359,7 @@ void MainWindow::receiveDirAndAtlasName(QString dirPath, QString atlasName)
 }
 
 // When toolbar data updates, call this so that item data updates
+// TODO: Because of this code, the nColumns and nRows don't persist through clicks
 void MainWindow::updateItemProperties()
 {
     QString itemName = ui->varNameText->text();
@@ -273,8 +423,10 @@ void MainWindow::snapUp()
         correctCollisions(item, SNAP_UP);
 //        finalizeCollisions(item, SNAP_UP);
     }
+    updateStatusBarText();
 }
 
+// deprecated
 void MainWindow::snapDown()
 {
     QList<QGraphicsItem*> selectedItems = atlasScene_->selectedItems();
@@ -285,6 +437,7 @@ void MainWindow::snapDown()
         correctCollisions(item, SNAP_DOWN);
         //finalizeCollisions(item, SNAP_DOWN);
     }
+    updateStatusBarText();
 }
 
 void MainWindow::snapLeft()
@@ -301,8 +454,10 @@ void MainWindow::snapLeft()
         correctCollisions(item, SNAP_LEFT);
         //finalizeCollisions(item, SNAP_LEFT);
     }
+    updateStatusBarText();
 }
 
+// deprecated
 void MainWindow::snapRight()
 {
     QList<QGraphicsItem*> selectedItems = atlasScene_->selectedItems();
@@ -313,6 +468,7 @@ void MainWindow::snapRight()
         correctCollisions(item, SNAP_RIGHT);
         //finalizeCollisions(item, SNAP_RIGHT);
     }
+    updateStatusBarText();
 }
 
 void MainWindow::selectAnother()
@@ -411,6 +567,13 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
         break;
     case 16777223: // Del key
         deleteItem();
+        break;
+    case 87: // W
+    case 44:
+        snapUp();
+        break;
+    case 65: // A
+        snapLeft();
         break;
     default:
         qDebug() << event->key();
@@ -598,7 +761,6 @@ QString MainWindow::createAndEngineCode()
         QString::number(currentAtlasRect_.width()) + ", " + \
         QString::number(currentAtlasRect_.height()) + ", TextureOptions.BILINEAR);\n";
 
-//    allItems = atlasScene_->items(currentAtlasRect_);
     foreach(QGraphicsItem* item, allItems)
     {
         QJsonObject userData = item->data(Qt::UserRole).toJsonObject();
@@ -641,7 +803,6 @@ QString MainWindow::createAndEngineCode()
 
     code += atlasName_ + ".load();";
 
-    qDebug() << code;
     andEngineCode_ = code;
     showTestOutput();
 
